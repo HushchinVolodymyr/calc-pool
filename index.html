@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Время игры до/после 17:00</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:360px;margin:30px auto;padding:0 16px}
+  label{display:block;margin:12px 0 4px}
+  input,button{width:100%;padding:10px;font-size:18px;box-sizing:border-box}
+  button{margin-top:16px;cursor:pointer}
+  #out{margin-top:20px;font-size:20px;line-height:1.6}
+  .err{color:#c00}
+</style>
+</head>
+<body>
+<h2>Время игры</h2>
+<label>Закончили (ЧЧ:ММ, 24ч)</label>
+<input id="end" type="text" placeholder="18:30" maxlength="5">
+<label>Сколько играли (минут)</label>
+<input id="dur" type="number" min="0" placeholder="120">
+<button onclick="calc()">Рассчитать</button>
+<div id="out"></div>
+
+<script>
+function calc(){
+  const out = document.getElementById('out');
+  const m = document.getElementById('end').value.trim().match(/^(\d{1,2})[:.]?(\d{2})$/);
+  const dur = parseInt(document.getElementById('dur').value, 10);
+  if(!m || +m[1] > 23 || +m[2] > 59){ out.innerHTML = '<span class="err">Неверное время</span>'; return; }
+  if(isNaN(dur) || dur < 0){ out.innerHTML = '<span class="err">Неверные минуты</span>'; return; }
+
+  const end = +m[1]*60 + +m[2];
+  const B = 17*60;
+  let before = 0, after = 0;
+  // перебор каждой сыгранной минуты (учитывает переход через полночь)
+  for(let i = 1; i <= dur; i++){
+    const t = ((end - i) % 1440 + 1440) % 1440;
+    if(t >= B) after++; else before++;
+  }
+  const start = ((end - dur) % 1440 + 1440) % 1440;
+  const hm = x => String(Math.floor(x/60)).padStart(2,'0') + ':' + String(x%60).padStart(2,'0');
+  out.innerHTML =
+    'Начало: <b>' + hm(start) + '</b><br>' +
+    'До 17:00: <b>' + before + '</b> мин<br>' +
+    'После 17:00: <b>' + after + '</b> мин';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Enter') calc(); });
+</script>
+</body>
+</html>
